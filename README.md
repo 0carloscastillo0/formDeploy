@@ -165,3 +165,5 @@ Debería mostrar el siguiente formulario listo para probar:
 ![Texto alternativo](formulario.png)
 
 ---
+## 🛠️ Pasos a seguir para ejecutar el programa con DOCKER
+EN PROCESO.....

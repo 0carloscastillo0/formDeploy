@@ -1,0 +1,43 @@
+services:
+  app:
+    build: .
+    container_name: mi_form_app
+    ports:
+      - "${APP_PORT}:80"
+    env_file:
+      - .env.deploy
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+    depends_on:
+      - db
+    mem_limit: 256m           # Limita la RAM máxima
+    mem_reservation: 128m     # RAM reservada mínima
+    networks:
+      - mi_red
+
+  db:
+    image: postgres:15
+    container_name: mi_form_db
+    restart: unless-stopped
+    env_file:
+      - .env.deploy
+    environment:
+      - POSTGRES_DB=${DB_DATABASE}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./SQL:/docker-entrypoint-initdb.d:ro
+    networks:
+      - mi_red
+
+volumes:
+  db_data:
+
+networks:
+  mi_red:
+    driver: bridge

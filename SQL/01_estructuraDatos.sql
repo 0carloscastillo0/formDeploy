@@ -1,31 +1,29 @@
---- Crear la base de datos
-CREATE DATABASE productos_db;
-\c productos_db;
-
 -- =============================
 -- TABLAS MAESTRAS
 -- =============================
+
 -- Tabla: bodega
-CREATE TABLE bodega (
+CREATE TABLE IF NOT EXISTS bodega (
     id SERIAL PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL
+    nombre VARCHAR(100) NOT NULL UNIQUE
 );
 
--- Tabla: Sucursal
-CREATE TABLE sucursal (
+-- Tabla: sucursal
+CREATE TABLE IF NOT EXISTS sucursal (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
-    bodega_id INT NOT NULL REFERENCES bodega(id) ON DELETE CASCADE
+    bodega_id INT NOT NULL REFERENCES bodega(id) ON DELETE CASCADE,
+    UNIQUE(nombre, bodega_id)
 );
 
---- Tabla: Moneda
-CREATE TABLE moneda (
+-- Tabla: moneda
+CREATE TABLE IF NOT EXISTS moneda (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(50) UNIQUE NOT NULL
 );
 
---- Tabla principal: producto
-CREATE TABLE producto (
+-- Tabla principal: producto
+CREATE TABLE IF NOT EXISTS producto (
     id SERIAL PRIMARY KEY,
     codigo VARCHAR(100) UNIQUE NOT NULL,
     nombre VARCHAR(100) NOT NULL,

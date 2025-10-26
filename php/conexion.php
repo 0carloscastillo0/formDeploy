@@ -1,10 +1,9 @@
 <?php
-// Edita aquí tus credenciales (a excepción de $dbname)
-$host = "localhost";
-$port = "5432";
-$dbname = "productos_db";
-$user = "postgres"; 
-$password = "1234";
+$host = getenv('DB_HOST') ?: 'db';
+$port = getenv('DB_PORT') ?: 5432;
+$dbname = getenv('DB_DATABASE');
+$user = getenv('DB_USER');
+$password = getenv('DB_PASSWORD');
 
 try {
     $dsn = "pgsql:host=$host;port=$port;dbname=$dbname";
