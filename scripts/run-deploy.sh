@@ -1,36 +1,49 @@
-# Requisitos previos:
-#   - Tener Docker instalado en el sistema
-#   - Tener el puerto definido en .env.deploy libre
-
 #!/bin/bash
-echo "🐳 Iniciando sistema en modo DEPLOY (Docker)..."
+# =====================================================
+# 🚀 Desplegar aplicación desde Docker Hub (Producción)
+# =====================================================
 
-# Detectar la ruta raíz del proyecto
+echo "🐳 Iniciando despliegue en servidor..."
+
+# Detectar ruta raíz
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-
-# Ruta del archivo de entorno
 ENV_FILE="$ROOT_DIR/.env.deploy"
+IMAGE_NAME="xcarloscastillox/productos_app:latest"
+COMPOSE_FILE="$ROOT_DIR/docker-compose.yml"
 
-# Verificar que Docker esté instalado
-if ! command -v docker &> /dev/null
-then
-    echo "❌ Docker no está instalado. Por favor instálalo antes de continuar."
+# Verificar Docker
+if ! command -v docker &> /dev/null; then
+    echo "❌ Docker no está instalado en este servidor."
     exit 1
 fi
 
-# Cargar las variables de entorno
+# Verificar .env y compose
+if [ ! -f "$ENV_FILE" ]; then
+    echo "❌ No se encontró el archivo .env.deploy"
+    exit 1
+fi
+if [ ! -f "$COMPOSE_FILE" ]; then
+    echo "❌ No se encontró el archivo docker-compose.yml"
+    exit 1
+fi
+
+# Cargar variables
 export $(grep -v '^#' "$ENV_FILE" | xargs)
 
-# Detener contenedores previos (y eliminar volúmenes)
-echo "🧹 Deteniendo contenedores y limpiando volúmenes previos..."
-docker compose -f "$ROOT_DIR/docker-compose.yml" down -v
+# Detener contenedores previos
+echo "🧹 Deteniendo contenedores y limpiando volúmenes antiguos..."
+docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" down -v || true
 
-# Levantar el entorno con build
-echo "🚀 Construyendo e iniciando contenedores..."
-docker compose -f "$ROOT_DIR/docker-compose.yml" --env-file "$ENV_FILE" up --build -d
+# Descargar la última imagen
+echo "📥 Descargando imagen actualizada desde Docker Hub..."
+docker pull "$IMAGE_NAME"
 
-# Mostrar resultado
-APP_PORT=$(grep APP_PORT "$ENV_FILE" | cut -d '=' -f2)
+# Levantar contenedores
+echo "🚀 Levantando aplicación..."
+docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d
+
+# Mostrar estado
 echo ""
-echo "✅ Sistema desplegado correctamente."
-echo "🌐 Accede en: http://localhost:${APP_PORT:-8080}"
+echo "✅ Despliegue completado exitosamente."
+APP_PORT=$(grep APP_PORT "$ENV_FILE" | cut -d '=' -f2)
+echo "🌐 Aplicación disponible en: http://localhost:${APP_PORT:-8080}"

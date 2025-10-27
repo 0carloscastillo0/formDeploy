@@ -1,25 +1,23 @@
-# Imagen base oficial de PHP con Apache
+# Imagen base más ligera
 FROM php:8.2-apache-bullseye
 
-# Variables de entorno para Apache
+# Variables de entorno
 ENV APACHE_DOCUMENT_ROOT=/var/www/html
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Instalar extensiones necesarias para PostgreSQL y utilidades
-RUN apt-get update && apt-get install -y \
+# Instalar dependencias mínimas para PostgreSQL
+RUN apt-get update && apt-get install -y --no-install-recommends \
         libpq-dev \
-        unzip \
-        git \
     && docker-php-ext-install pdo pdo_pgsql \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get purge -y --auto-remove \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Configurar Apache para apuntar a la carpeta correcta
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+# Configurar Apache para el DocumentRoot correcto
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf \
+ && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf \
+ && a2enmod rewrite
 
-# Habilitar mod_rewrite si tu proyecto lo necesita
-RUN a2enmod rewrite
-
-# Carpeta de trabajo
+# Directorio de trabajo
 WORKDIR /var/www/html
 
 # Copiar solo lo necesario
@@ -29,7 +27,7 @@ COPY js/ ./js/
 COPY css/ ./css/
 COPY SQL/ /docker-entrypoint-initdb.d/
 
-# Exponer puerto 80
+# Exponer el puerto
 EXPOSE 80
 
 # Comando por defecto
